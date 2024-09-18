@@ -310,8 +310,6 @@ with st.expander("Детальна інформація про зони", expand
 styled_line(color='#8bbdd9', height='1px')
 
 # Блок 4: Фільтрація даних по 'Category'
-st.write('<h1 style="text-align: center;">Інформація по Категоріям</h1>', unsafe_allow_html=True)
-
 def get_valid_categories(df):
     valid_categories = df['Категорія'].dropna().unique()
     return [category for category in valid_categories if pd.notna(category) and category.strip() != '']
@@ -336,7 +334,7 @@ if selected_category != "Вибрати категорію":
         .table-container {
             max-width: 100%;
             overflow-x: auto;
-            font-size: 14px; /* Розмір шрифта таблиці */
+            font-size: 9px; /* Розмір шрифта таблиці */
         }
         table {
             width: 100%;
@@ -349,15 +347,13 @@ if selected_category != "Вибрати категорію":
         th {
             background-color: #f2f2f2;
         }
-        @media (max-width: 600px) {
-            th, td {
-                font-size: 12px; /* Менший розмір шрифту на мобільних пристроях */
-            }
+        .table {
+            min-width: 50px; /* Мінімальна ширина таблиці для мобільних пристроїв */
         }
         </style>
     """
 
-    html_table = table_styles + '<div class="table-container">' + filtered_df[columns_to_display].to_html(index=False) + '</div>'
+    html_table = table_styles + '<div class="table-container">' + filtered_df[columns_to_display].to_html(index=False, classes="table") + '</div>'
 
     with st.expander("Детальна інформація", expanded=True):
         st.write(html_table, unsafe_allow_html=True)
