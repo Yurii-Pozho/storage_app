@@ -96,50 +96,62 @@ def load_image(img_path):
             st.write(f"Помилка при обробці локального зображення: {e}")
     return None
 
-st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
-
-# Вставка HTML та JavaScript коду для сканування QR-кодів
+# HTML + JavaScript для сканування QR-кодів
 st.markdown("""
-<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-<script>
-function startScanning() {
-    var html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        {
-            fps: 10,    // Показує 10 кадрів на секунду
-            qrbox: 250  // Розмір області сканування
-        },
-        (decodedText, decodedResult) => {
-            document.getElementById('result').innerText = decodedText;
-            // Передати результат сканування в Streamlit
-            fetch(`/update_id/${decodedText}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("ID updated in Streamlit:", data);
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script>
+    function startScanning() {
+        var html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: 250
+            },
+            (decodedText, decodedResult) => {
+                document.getElementById('result').innerText = decodedText;
+                // Записати зчитаний ID в поле вводу Streamlit
+                window.parent.postMessage({ type: "id_scanned", id: decodedText }, "*");
+                html5QrCode.stop().then(() => {
+                    console.log("Stopped successfully.");
+                }).catch((err) => {
+                    console.log("Error stopping:", err);
                 });
-            html5QrCode.stop().then(() => {
-                // Зупинити сканування
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        (errorMessage) => {
-            // Помилка сканування
-        }
-    ).catch((err) => {
-        // Помилка запуску сканування
-    });
-}
-</script>
+            },
+            (errorMessage) => {
+                console.log("Error scanning:", errorMessage);
+            }
+        ).catch((err) => {
+            console.log("Error starting QR code scanner:", err);
+        });
+    }
 
-<button onclick="startScanning()">Запустити сканер</button>
-<div id="reader" style="width: 100%; height: 300px;"></div>
-<div id="result" style="margin-top: 20px;"></div>
+    window.onload = function() {
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "id_scanned") {
+                document.getElementById("id_input").value = event.data.id;
+                document.getElementById("id_input").dispatchEvent(new Event('input'));
+            }
+        });
+    }
+    </script>
+    <button onclick="startScanning()">Запустити сканер</button>
+    <div id="reader" style="width: 100%; height: 300px;"></div>
+    <div id="result" style="margin-top: 20px;"></div>
 """, unsafe_allow_html=True)
 
-# Оновлення ID на основі результату сканування
-id_input = st.text_input('Введіть ID')
+# Ввід ID
+st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
+id_input = st.text_input('Введіть ID', key="id_input")
+
+# Приклад DataFrame
+df = pd.DataFrame({
+    'id': [1, 2, 3],
+    'Image': ['https://via.placeholder.com/150', 'https://via.placeholder.com/150', 'https://via.placeholder.com/150'],
+    'Основний постачальник': ['Постачальник 1', 'Постачальник 2', 'Постачальник 3'],
+    'Всього ящиків': [10, 20, 30],
+    # Додайте інші колонки відповідно до ваших даних
+})
 
 if id_input:
     filtered_df = df[df['id'] == int(id_input)]
