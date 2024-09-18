@@ -240,19 +240,34 @@ else:
     ]
 
     with st.expander("Детальна інформація", expanded=True):
-        # Відображення таблиці з прокруткою та налаштуванням шрифта
+    # Відображення таблиці з прокруткою та налаштуванням шрифта
         st.markdown("""
             <style>
             .table-container {
                 max-width: 100%;
                 overflow-x: auto;
-                font-size: 10px; /* Розмір шрифта таблиці */
             }
+
+            /* Шрифт для десктопів */
             .table {
+                font-size: 14px; /* Розмір шрифту для десктопу */
                 width: 100%;
-                min-width: 600px; /* Мінімальна ширина таблиці для мобільних пристроїв */
+                min-width: 600px; /* Мінімальна ширина таблиці */
+            }
+
+            /* Шрифт для мобільних пристроїв */
+            @media only screen and (max-width: 600px) {
+                .table {
+                    font-size: 10px; /* Розмір шрифту для мобільних пристроїв */
+                    min-width: 300px; /* Мінімальна ширина таблиці для мобільних пристроїв */
+                }
             }
             </style>
+            <div class="table-container">
+                <table class="table">
+                    <!-- Тут буде ваша таблиця або дані -->
+                </table>
+            </div>
         """, unsafe_allow_html=True)
 
         st.write(
