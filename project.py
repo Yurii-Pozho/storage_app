@@ -164,8 +164,13 @@ if id_input:
         st.write('Не знайдено даних для вказаного ID')
 
 # === Блок 2 ===
-styled_line(color='#8bbdd9', height='1px')
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from PIL import Image
+import os
 
+# Блок 2: Фільтрація даних по 'Area'
 st.write('<h1 style="text-align: center;">Фільтрація даних по Зонам</h1>', unsafe_allow_html=True)
 
 # Фіксований порядок зон
@@ -230,15 +235,17 @@ else:
     ]
 
     with st.expander("Детальна інформація", expanded=True):
-        # Відображення таблиці з прокруткою
+        # Відображення таблиці з прокруткою та налаштуванням шрифта
         st.markdown("""
             <style>
             .table-container {
                 max-width: 100%;
                 overflow-x: auto;
+                font-size: 14px; /* Розмір шрифта таблиці */
             }
             .table {
                 width: 100%;
+                min-width: 600px; /* Мінімальна ширина таблиці для мобільних пристроїв */
             }
             </style>
         """, unsafe_allow_html=True)
@@ -247,6 +254,7 @@ else:
             f'<div class="table-container">{filtered_df[columns_to_display].to_html(index=False, classes="table")}</div>',
             unsafe_allow_html=True
         )
+
 # Блок 3: Загальна інформація по зонам
 st.write('<h3 style="text-align: center;">Загальна інформація по зонам</h3>', unsafe_allow_html=True)
 df['Ширина'] = pd.to_numeric(df['Ширина'], errors='coerce')
