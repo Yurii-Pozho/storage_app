@@ -257,6 +257,7 @@ else:
 
 # Блок 3: Загальна інформація по зонам
 st.write('<h3 style="text-align: center;">Загальна інформація по зонам</h3>', unsafe_allow_html=True)
+
 df['Ширина'] = pd.to_numeric(df['Ширина'], errors='coerce')
 
 data = {
@@ -278,6 +279,11 @@ area['Залишок'] = area['Ширина'] - area['Сума_Ширина']
 
 table_styles = """
     <style>
+    .table-container {
+        max-width: 100%;
+        overflow-x: auto;
+        font-size: 10px; /* Розмір шрифта таблиці */
+    }
     table {
         width: 100%;
         border-collapse: collapse;
@@ -289,10 +295,13 @@ table_styles = """
     th {
         background-color: #f2f2f2;
     }
+    .table {
+        min-width: 600px; /* Мінімальна ширина таблиці для мобільних пристроїв */
+    }
     </style>
 """
 
-html_table = table_styles + area.to_html(index=False)
+html_table = table_styles + '<div class="table-container">' + area.to_html(index=False, classes="table") + '</div>'
 
 with st.expander("Детальна інформація про зони", expanded=False):
     st.write(html_table, unsafe_allow_html=True)
