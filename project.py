@@ -337,14 +337,14 @@ else:
     table_styles = """
         <style>
         .table-container {
-            max-width: 100%;
+            width: 100%;
             overflow-x: auto;
             margin: 0 auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px; /* Розмір шрифта таблиці */
+            font-size: 12px; /* Зменшений розмір шрифта для мобільних пристроїв */
         }
         th, td {
             text-align: center;
