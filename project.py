@@ -310,7 +310,7 @@ with st.expander("Детальна інформація про зони", expand
 styled_line(color='#8bbdd9', height='1px')
 
 # Блок 4: Фільтрація даних по 'Category'
-st.write('<h1 style="text-align: center;">Інформація по Категоріям</h1>', unsafe_allow_html=True)
+st.write('<h1 style="text-align: center;"> Інформація по Категоріям</h1>', unsafe_allow_html=True)
 
 def get_valid_categories(df):
     valid_categories = df['Категорія'].dropna().unique()
@@ -327,8 +327,8 @@ else:
     filtered_df = df[df['Категорія'] == selected_category]
     filtered_df.reset_index(drop=True, inplace=True)
     filtered_df.insert(0, '№', filtered_df.index + 1)
-    filtered_df.loc[:, 'Рядів'] = pd.to_numeric(filtered_df['Рядів'], errors='coerce').round(2)
-    filtered_df.loc[:, 'Ширина'] = pd.to_numeric(filtered_df['Ширина'], errors='coerce').round(2)
+    filtered_df['Рядів'] = pd.to_numeric(filtered_df['Рядів'], errors='coerce').round(2)
+    filtered_df['Ширина'] = pd.to_numeric(filtered_df['Ширина'], errors='coerce').round(2)
 
     columns_to_display = [
         '№', 'Номенклатура', 'id', 'Категорія', 'Артикул', 'Рядів', 'Ширина'
@@ -337,18 +337,16 @@ else:
     table_styles = """
         <style>
         .table-container {
-            width: 100%;
             overflow-x: auto;
-            margin: 0 auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px; /* Зменшений розмір шрифта для мобільних пристроїв */
         }
         th, td {
             text-align: center;
             padding: 8px;
+            font-size: 14px;
         }
         th {
             background-color: #f2f2f2;
@@ -356,7 +354,7 @@ else:
         </style>
     """
 
-    html_table = table_styles + '<div class="table-container">' + filtered_df[columns_to_display].to_html(index=False) + '</div>'
+    html_table = table_styles + filtered_df[columns_to_display].to_html(index=False)
 
     with st.expander("Детальна інформація", expanded=True):
         st.write(html_table, unsafe_allow_html=True)
