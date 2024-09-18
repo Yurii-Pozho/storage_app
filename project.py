@@ -339,6 +339,7 @@ else:
         .table-container {
             max-width: 100%;
             overflow-x: auto;
+            margin: 0 auto;
         }
         table {
             width: 100%;
