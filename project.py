@@ -327,8 +327,8 @@ else:
     filtered_df = df[df['Категорія'] == selected_category]
     filtered_df.reset_index(drop=True, inplace=True)
     filtered_df.insert(0, '№', filtered_df.index + 1)
-    filtered_df['Рядів'] = pd.to_numeric(filtered_df['Рядів'], errors='coerce').round(2)
-    filtered_df['Ширина'] = pd.to_numeric(filtered_df['Ширина'], errors='coerce').round(2)
+    filtered_df.loc[:, 'Рядів'] = pd.to_numeric(filtered_df['Рядів'], errors='coerce').round(2)
+    filtered_df.loc[:, 'Ширина'] = pd.to_numeric(filtered_df['Ширина'], errors='coerce').round(2)
 
     columns_to_display = [
         '№', 'Номенклатура', 'id', 'Категорія', 'Артикул', 'Рядів', 'Ширина'
