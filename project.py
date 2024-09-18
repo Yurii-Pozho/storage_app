@@ -334,17 +334,17 @@ if selected_category != "Вибрати категорію":
     table_styles = """
         <style>
         .table-container {
-            width: 100%;
+            max-width: 100%;
             overflow-x: auto;
+            font-size: 14px; /* Розмір шрифта таблиці */
         }
         table {
-            border-collapse: collapse;
             width: 100%;
+            border-collapse: collapse;
         }
         th, td {
             text-align: center;
             padding: 8px;
-            font-size: 14px;  /* Розмір шрифту */
         }
         th {
             background-color: #f2f2f2;
