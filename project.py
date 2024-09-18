@@ -96,65 +96,57 @@ def load_image(img_path):
             st.write(f"Помилка при обробці локального зображення: {e}")
     return None
 
-st.write('<h1 style="text-align: center;">Перегляд даних за ID або Штрих-кодом</h1>', unsafe_allow_html=True)
+st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
 
-# JavaScript для сканування штрих-коду
-quagga_js = """
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-    <script>
-    function startScanner() {
-        var App = {
-            init: function() {
-                Quagga.init(this.state, function(err) {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    }
-                    App.attachListeners();
-                    Quagga.start();
+# Вставка HTML та JavaScript коду для сканування QR-кодів
+st.markdown("""
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+function startScanning() {
+    var html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        {
+            fps: 10,    // Показує 10 кадрів на секунду
+            qrbox: 250  // Розмір області сканування
+        },
+        (decodedText, decodedResult) => {
+            document.getElementById('result').innerText = decodedText;
+            // Передати результат сканування в Streamlit
+            fetch(`/update_id/${decodedText}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("ID updated in Streamlit:", data);
                 });
-            },
-            state: {
-                inputStream: {
-                    type: "LiveStream",
-                    constraints: {
-                        width: 640,
-                        height: 480,
-                        facingMode: "environment" // використання основної камери
-                    },
-                },
-                decoder: {
-                    readers: ["code_128_reader", "ean_reader"] // Різні типи штрих-кодів
-                }
-            },
-            attachListeners: function() {
-                Quagga.onDetected(function(result) {
-                    document.getElementById("barcode_result").value = result.codeResult.code;
-                    Quagga.stop(); // Зупинка сканера після зчитування
-                });
-            }
-        };
+            html5QrCode.stop().then(() => {
+                // Зупинити сканування
+            }).catch((err) => {
+                console.log(err);
+            });
+        },
+        (errorMessage) => {
+            // Помилка сканування
+        }
+    ).catch((err) => {
+        // Помилка запуску сканування
+    });
+}
+</script>
 
-        App.init();
-    }
-    </script>
-    <button onclick="startScanner()">📷 Сканувати штрих-код</button>
-    <input id="barcode_result" type="text" placeholder="Результат штрих-коду">
-"""
+<button onclick="startScanning()">Запустити сканер</button>
+<div id="reader" style="width: 100%; height: 300px;"></div>
+<div id="result" style="margin-top: 20px;"></div>
+""", unsafe_allow_html=True)
 
-# Виведення кнопки для сканування штрих-коду та поля введення
-st.write(quagga_js, unsafe_allow_html=True)
+# Оновлення ID на основі результату сканування
+id_input = st.text_input('Введіть ID')
 
-# Поле для вводу ID або зчитаного штрих-коду
-id_input = st.text_input('Введіть ID або Штрих-код', key="barcode_result")
-
-# Обробка введення
 if id_input:
-    filtered_df = df[df['id'] == int(id_input)]  # Пошук по ID
+    filtered_df = df[df['id'] == int(id_input)]
     
     if not filtered_df.empty:
         with st.expander("Інформація для вибраного ID:", expanded=True):
-            # Відображення зображення
+            # Спочатку показати зображення
             if 'Image' in filtered_df.columns:
                 for img_path in filtered_df['Image']:
                     image = load_image(img_path)
@@ -163,7 +155,7 @@ if id_input:
                         resized_image = image.resize(new_size, Image.LANCZOS)
                         st.image(resized_image, width=200)
             
-            # Відображення таблиці в два стовпці
+            # Потім показати інформацію з відображенням у два стовпці
             column_mapping = {
                 "id": "Основний постачальник",
                 "Тип": "Всього ящиків",
@@ -186,34 +178,35 @@ if id_input:
             def format_value(value, column_name):
                 """Форматування значення: округлення чисел до двох десяткових знаків, крім 'id' та 'Артикул'."""
                 try:
+                    # Перевірка, чи є значення числом
                     if isinstance(value, (int, float)):
                         if column_name in ["id", "Артикул"]:
-                            return value
-                        return f"{float(value):.2f}"
+                            return value  # Не форматувати 'id' та 'Артикул'
+                        return f"{float(value):.2f}"  # Округляти до двох знаків після коми
                     else:
-                        return value
+                        return value  # Якщо значення не є числом, повертаємо його без змін
                 except ValueError:
-                    return value
+                    return value  # Повернути оригінальне значення у випадку помилки
 
             for i, (col_left, col_right) in enumerate(column_mapping.items()):
                 if col_left in filtered_df.columns:
                     value = filtered_df[col_left].values[0]
                     formatted_value = format_value(value, col_left)
-                    col1.write(f"**{col_left}:** {formatted_value}")
+                    if col_left in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
+                        col1.write(f'<p style="color:#023E8A;"><strong>{col_left}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
+                    else:
+                        col1.write(f"**{col_left}:** {formatted_value}")
 
                 if col_right in filtered_df.columns:
                     value = filtered_df[col_right].values[0]
                     formatted_value = format_value(value, col_right)
-                    col2.write(f"**{col_right}:** {formatted_value}")
-    else:
-        st.write('Не знайдено даних для вказаного ID або Штрих-коду')
+                    if col_right in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
+                        col2.write(f'<p style="color:#023E8A;"><strong>{col_right}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
+                    else:
+                        col2.write(f"**{col_right}:** {formatted_value}")
 
-# === Блок 2 ===
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from PIL import Image
-import os
+    else:
+        st.write('Не знайдено даних для вказаного ID')
 
 # Блок 2: Фільтрація даних по 'Area'
 st.write('<h1 style="text-align: center;">Фільтрація даних по Зонам</h1>', unsafe_allow_html=True)
