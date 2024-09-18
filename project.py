@@ -319,41 +319,51 @@ options = ["Вибрати категорію"] + valid_categories
 
 selected_category = st.selectbox("", options)
 
-if selected_category != "Вибрати категорію":
+if selected_category == "Вибрати категорію":
+    st.write("")
+else:
     filtered_df = df[df['Категорія'] == selected_category]
     filtered_df.reset_index(drop=True, inplace=True)
     filtered_df.insert(0, '№', filtered_df.index + 1)
     filtered_df['Рядів'] = pd.to_numeric(filtered_df['Рядів'], errors='coerce').round(2)
     filtered_df['Ширина'] = pd.to_numeric(filtered_df['Ширина'], errors='coerce').round(2)
 
-    columns_to_display = ['№', 'Номенклатура', 'id', 'Категорія', 'Артикул', 'Рядів', 'Ширина']
+    columns_to_display = [
+        '№', 'Номенклатура', 'id', 'Категорія', 'Артикул', 'Рядів', 'Ширина'
+    ]
 
-    # Стилі CSS для таблиці
-    table_styles = """
-        <style>
-        .table-container {
-            max-width: 100%;
-            overflow-x: auto;
-            font-size: 9px; /* Розмір шрифта таблиці */
+    # CSS for mobile responsiveness
+    css = """
+    <style>
+    @media only screen and (max-width: 600px) {
+        .dataframe {
+            font-size: 12px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .dataframe td, .dataframe th {
+            padding: 5px;
         }
-        th, td {
-            text-align: center;
-            padding: 8px;
+        .dataframe thead {
+            display: none;
         }
-        th {
-            background-color: #f2f2f2;
+        .dataframe tr {
+            display: block;
+            margin-bottom: 10px;
         }
-        .table {
-            min-width: 50px; /* Мінімальна ширина таблиці для мобільних пристроїв */
+        .dataframe td {
+            display: block;
+            text-align: right;
         }
-        </style>
+        .dataframe td:before {
+            content: attr(data-label);
+            font-weight: bold;
+            display: block;
+        }
+    }
+    </style>
     """
 
-    html_table = table_styles + '<div class="table-container">' + filtered_df[columns_to_display].to_html(index=False, classes="table") + '</div>'
+    st.write(css, unsafe_allow_html=True)
 
     with st.expander("Детальна інформація", expanded=True):
+        html_table = filtered_df[columns_to_display].to_html(index=False, classes='dataframe')
         st.write(html_table, unsafe_allow_html=True)
