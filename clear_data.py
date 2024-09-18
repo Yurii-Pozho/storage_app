@@ -1,7 +1,5 @@
 import pandas as pd
 from openpyxl import load_workbook
-from sqlalchemy import create_engine
-from sqlalchemy import text
 
 # Підключення Ексель файлу
 

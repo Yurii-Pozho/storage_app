@@ -167,13 +167,9 @@ if id_input:
 
     else:
         st.write('Не знайдено даних для вказаного ID')
-
+# Роздільник
+styled_line(color='#8bbdd9', height='1px')
 # === Блок 2 ===
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from PIL import Image
-import os
 
 # Блок 2: Фільтрація даних по 'Area'
 st.write('<h1 style="text-align: center;">Фільтрація даних по Зонам</h1>', unsafe_allow_html=True)
