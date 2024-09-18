@@ -76,6 +76,26 @@ def styled_line(color='#8bbdd9', height='1px'):
     st.markdown(line_html, unsafe_allow_html=True)
 
 # Блок 1: Фільтрація даних за введеним ID
+def load_image(img_path):
+    """Завантаження зображення з локального файлу або URL."""
+    img_path = img_path.strip('"')  # Видалення лапок, якщо є
+    if img_path.startswith('http'):
+        try:
+            response = requests.get(img_path)
+            if response.status_code == 200:
+                return Image.open(BytesIO(response.content))
+            else:
+                st.write(f"Не вдалося завантажити зображення з URL: {img_path}")
+        except Exception as e:
+            st.write(f"Помилка при завантаженні зображення з URL: {e}")
+    else:
+        try:
+            img_path = os.path.normpath(img_path)  # Нормалізація шляху
+            return Image.open(img_path)
+        except Exception as e:
+            st.write(f"Помилка при обробці локального зображення: {e}")
+    return None
+
 st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
 
 id_input = st.text_input('Введіть ID')
@@ -96,10 +116,10 @@ if id_input:
             
             # Потім показати інформацію з відображенням у два стовпці
             column_mapping = {
-                "id": "Категорія",
-                "Тип": "Основний постачальник",
+                "id": "Основний постачальник",
+                "Тип": "Всього ящиків",
                 "Артикул": "Штук у ящику",
-                "Всього ящиків": "Залишок штук",
+                "Категорія": "Залишок штук",
                 "Зона": "Залишок ящиків",
                 "Номенклатура": "Замовлення 2024 ящиків",
                 "Рядів": "Глибина зони ящиків",
@@ -114,28 +134,38 @@ if id_input:
             # Виведення у два стовпці
             col1, col2 = st.columns(2)
 
+            def format_value(value, column_name):
+                """Форматування значення: округлення чисел до двох десяткових знаків, крім 'id' та 'Артикул'."""
+                try:
+                    if column_name in ["id", "Артикул"]:
+                        return value
+                    return f"{float(value):.2f}"
+                except ValueError:
+                    return value
+
             for i, (col_left, col_right) in enumerate(column_mapping.items()):
                 if col_left in filtered_df.columns:
-                    # Перевірка на зміну кольору для обох типів полів (Штук та Ящик)
+                    value = filtered_df[col_left].values[0]
+                    formatted_value = format_value(value, col_left)
                     if col_left in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
-                        col1.write(f'<p style="color:#023E8A;"><strong>{col_left}:</strong> {filtered_df[col_left].values[0]}</p>', unsafe_allow_html=True)
+                        col1.write(f'<p style="color:#023E8A;"><strong>{col_left}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
                     else:
-                        col1.write(f"**{col_left}:** {filtered_df[col_left].values[0]}")
+                        col1.write(f"**{col_left}:** {formatted_value}")
 
                 if col_right in filtered_df.columns:
-                    # Аналогічна перевірка для правої колонки
+                    value = filtered_df[col_right].values[0]
+                    formatted_value = format_value(value, col_right)
                     if col_right in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
-                        col2.write(f'<p style="color:#023E8A;"><strong>{col_right}:</strong> {filtered_df[col_right].values[0]}</p>', unsafe_allow_html=True)
+                        col2.write(f'<p style="color:#023E8A;"><strong>{col_right}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
                     else:
-                        col2.write(f"**{col_right}:** {filtered_df[col_right].values[0]}")
+                        col2.write(f"**{col_right}:** {formatted_value}")
 
     else:
         st.write('Не знайдено даних для вказаного ID')
 
-
+# === Блок 2 ===
 styled_line(color='#8bbdd9', height='1px')
 
-# Блок 2: Фільтрація даних по 'Area'
 st.write('<h1 style="text-align: center;">Фільтрація даних по Зонам</h1>', unsafe_allow_html=True)
 
 # Фіксований порядок зон
@@ -182,8 +212,14 @@ else:
                 color_continuous_scale='Blues'
             )
             
+            # Адаптивне відображення графіка
+            fig.update_layout(
+                autosize=True,
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            
             with st.expander("", expanded=True):
-                st.plotly_chart(fig)
+                st.plotly_chart(fig, use_container_width=True)
         except Exception as e:
             st.error(f"Помилка при створенні графіка: {e}")
     else:
@@ -194,12 +230,23 @@ else:
     ]
 
     with st.expander("Детальна інформація", expanded=True):
+        # Відображення таблиці з прокруткою
+        st.markdown("""
+            <style>
+            .table-container {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+            .table {
+                width: 100%;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
         st.write(
-            filtered_df[columns_to_display].to_html(index=False),
+            f'<div class="table-container">{filtered_df[columns_to_display].to_html(index=False, classes="table")}</div>',
             unsafe_allow_html=True
         )
-
-
 # Блок 3: Загальна інформація по зонам
 st.write('<h3 style="text-align: center;">Загальна інформація по зонам</h3>', unsafe_allow_html=True)
 df['Ширина'] = pd.to_numeric(df['Ширина'], errors='coerce')
