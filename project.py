@@ -241,11 +241,11 @@ else:
             .table-container {
                 max-width: 100%;
                 overflow-x: auto;
-                font-size: 14px; /* Розмір шрифта таблиці */
+                font-size: 8px; /* Розмір шрифта таблиці */
             }
             .table {
                 width: 100%;
-                min-width: 300px; /* Мінімальна ширина таблиці для мобільних пристроїв */
+                min-width: 600px; /* Мінімальна ширина таблиці для мобільних пристроїв */
             }
             </style>
         """, unsafe_allow_html=True)
