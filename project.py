@@ -241,7 +241,7 @@ else:
             .table-container {
                 max-width: 100%;
                 overflow-x: auto;
-                font-size: 8px; /* Розмір шрифта таблиці */
+                font-size: 10px; /* Розмір шрифта таблиці */
             }
             .table {
                 width: 100%;
