@@ -137,11 +137,16 @@ if id_input:
             def format_value(value, column_name):
                 """Форматування значення: округлення чисел до двох десяткових знаків, крім 'id' та 'Артикул'."""
                 try:
-                    if column_name in ["id", "Артикул"]:
-                        return value
-                    return f"{float(value):.2f}"
+                    # Перевірка, чи є значення числом
+                    if isinstance(value, (int, float)):
+                        if column_name in ["id", "Артикул"]:
+                            return value  # Не форматувати 'id' та 'Артикул'
+                        return f"{float(value):.2f}"  # Округляти до двох знаків після коми
+                    else:
+                        return value  # Якщо значення не є числом, повертаємо його без змін
                 except ValueError:
-                    return value
+                    return value  # Повернути оригінальне значення у випадку помилки
+
 
             for i, (col_left, col_right) in enumerate(column_mapping.items()):
                 if col_left in filtered_df.columns:
