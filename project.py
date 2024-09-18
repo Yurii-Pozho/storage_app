@@ -6,8 +6,6 @@ from io import BytesIO
 import requests
 import os
 import plotly.express as px
-import cv2
-import tempfile
 
 # Вкажіть шлях до вашої SQLite бази даних у форматі URI
 database_path = 'sqlite:///test_database.db'
@@ -98,53 +96,13 @@ def load_image(img_path):
             st.write(f"Помилка при обробці локального зображення: {e}")
     return None
 
-def scan_qr_code():
-    """Функція для сканування QR-кодів з відеопотоку."""
-    # Використовуємо тимчасовий файл для зберігання зображення
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-        temp_filename = temp_file.name
-
-    cap = cv2.VideoCapture(0)
-    stframe = st.empty()
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            st.write("Не вдалося отримати кадр з камери.")
-            break
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        detector = cv2.QRCodeDetector()
-        data, points, _ = detector.detectAndDecode(gray)
-
-        if data:
-            st.write(f"QR Code Data: {data}")
-
-            # Збереження зображення до тимчасового файлу
-            cv2.imwrite(temp_filename, frame)
-            st.image(temp_filename, caption="QR Code Image")
-
-            cap.release()
-            cv2.destroyAllWindows()
-            os.remove(temp_filename)
-            break
-
-        stframe.image(frame, channels='BGR')
-
-        if st.button('Stop'):
-            break
-
-    if cap.isOpened():
-        cap.release()
-        cv2.destroyAllWindows()
-
 st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
 
 id_input = st.text_input('Введіть ID')
 
 if id_input:
     filtered_df = df[df['id'] == int(id_input)]
-
+    
     if not filtered_df.empty:
         with st.expander("Інформація для вибраного ID:", expanded=True):
             # Спочатку показати зображення
@@ -155,7 +113,7 @@ if id_input:
                         new_size = (400, 300)
                         resized_image = image.resize(new_size, Image.LANCZOS)
                         st.image(resized_image, width=200)
-
+            
             # Потім показати інформацію з відображенням у два стовпці
             column_mapping = {
                 "id": "Основний постачальник",
@@ -189,6 +147,7 @@ if id_input:
                 except ValueError:
                     return value  # Повернути оригінальне значення у випадку помилки
 
+
             for i, (col_left, col_right) in enumerate(column_mapping.items()):
                 if col_left in filtered_df.columns:
                     value = filtered_df[col_left].values[0]
@@ -209,9 +168,12 @@ if id_input:
     else:
         st.write('Не знайдено даних для вказаного ID')
 
-# Кнопка для запуску сканування QR-кодів
-if st.button('Scan QR Code'):
-    scan_qr_code()
+# === Блок 2 ===
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from PIL import Image
+import os
 
 # Блок 2: Фільтрація даних по 'Area'
 st.write('<h1 style="text-align: center;">Фільтрація даних по Зонам</h1>', unsafe_allow_html=True)
