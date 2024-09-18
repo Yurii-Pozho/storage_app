@@ -75,7 +75,7 @@ def styled_line(color='#8bbdd9', height='1px'):
     """
     st.markdown(line_html, unsafe_allow_html=True)
 
-# Блок 1: Фільтрація даних за введеним ID
+#===== Блок 1: Фільтрація даних за введеним ID =====
 def load_image(img_path):
     """Завантаження зображення з локального файлу або URL."""
     img_path = img_path.strip('"')  # Видалення лапок, якщо є
@@ -96,16 +96,65 @@ def load_image(img_path):
             st.write(f"Помилка при обробці локального зображення: {e}")
     return None
 
-st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
+st.write('<h1 style="text-align: center;">Перегляд даних за ID або Штрих-кодом</h1>', unsafe_allow_html=True)
 
-id_input = st.text_input('Введіть ID')
+# JavaScript для сканування штрих-коду
+quagga_js = """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script>
+    function startScanner() {
+        var App = {
+            init: function() {
+                Quagga.init(this.state, function(err) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    App.attachListeners();
+                    Quagga.start();
+                });
+            },
+            state: {
+                inputStream: {
+                    type: "LiveStream",
+                    constraints: {
+                        width: 640,
+                        height: 480,
+                        facingMode: "environment" // використання основної камери
+                    },
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader"] // Різні типи штрих-кодів
+                }
+            },
+            attachListeners: function() {
+                Quagga.onDetected(function(result) {
+                    document.getElementById("barcode_result").value = result.codeResult.code;
+                    Quagga.stop(); // Зупинка сканера після зчитування
+                });
+            }
+        };
 
+        App.init();
+    }
+    </script>
+    <button onclick="startScanner()">📷 Сканувати штрих-код</button>
+    <input id="barcode_result" type="text" placeholder="Результат штрих-коду">
+"""
+
+# Виведення кнопки для сканування штрих-коду та поля введення
+st.write(quagga_js, unsafe_allow_html=True)
+
+# Поле для вводу ID або зчитаного штрих-коду
+id_input = st.text_input('Введіть ID або Штрих-код', key="barcode_result")
+
+# Обробка введення
 if id_input:
-    filtered_df = df[df['id'] == int(id_input)]
+    filtered_df = df[df['id'] == int(id_input)]  # Пошук по ID
     
     if not filtered_df.empty:
         with st.expander("Інформація для вибраного ID:", expanded=True):
-            # Спочатку показати зображення
+            # Відображення зображення
             if 'Image' in filtered_df.columns:
                 for img_path in filtered_df['Image']:
                     image = load_image(img_path)
@@ -114,7 +163,7 @@ if id_input:
                         resized_image = image.resize(new_size, Image.LANCZOS)
                         st.image(resized_image, width=200)
             
-            # Потім показати інформацію з відображенням у два стовпці
+            # Відображення таблиці в два стовпці
             column_mapping = {
                 "id": "Основний постачальник",
                 "Тип": "Всього ящиків",
@@ -137,36 +186,27 @@ if id_input:
             def format_value(value, column_name):
                 """Форматування значення: округлення чисел до двох десяткових знаків, крім 'id' та 'Артикул'."""
                 try:
-                    # Перевірка, чи є значення числом
                     if isinstance(value, (int, float)):
                         if column_name in ["id", "Артикул"]:
-                            return value  # Не форматувати 'id' та 'Артикул'
-                        return f"{float(value):.2f}"  # Округляти до двох знаків після коми
+                            return value
+                        return f"{float(value):.2f}"
                     else:
-                        return value  # Якщо значення не є числом, повертаємо його без змін
+                        return value
                 except ValueError:
-                    return value  # Повернути оригінальне значення у випадку помилки
-
+                    return value
 
             for i, (col_left, col_right) in enumerate(column_mapping.items()):
                 if col_left in filtered_df.columns:
                     value = filtered_df[col_left].values[0]
                     formatted_value = format_value(value, col_left)
-                    if col_left in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
-                        col1.write(f'<p style="color:#023E8A;"><strong>{col_left}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
-                    else:
-                        col1.write(f"**{col_left}:** {formatted_value}")
+                    col1.write(f"**{col_left}:** {formatted_value}")
 
                 if col_right in filtered_df.columns:
                     value = filtered_df[col_right].values[0]
                     formatted_value = format_value(value, col_right)
-                    if col_right in ["Штук об'єм", "Штук ширина", "Штук вага", "Штук довжина", "Штук висота", "Ящик об'єм", "Ящик ширина (вздовж глибини)", "Ящик вага", "Ящик довжина (до стіни)", "Ящик висота"]:
-                        col2.write(f'<p style="color:#023E8A;"><strong>{col_right}:</strong> {formatted_value}</p>', unsafe_allow_html=True)
-                    else:
-                        col2.write(f"**{col_right}:** {formatted_value}")
-
+                    col2.write(f"**{col_right}:** {formatted_value}")
     else:
-        st.write('Не знайдено даних для вказаного ID')
+        st.write('Не знайдено даних для вказаного ID або Штрих-коду')
 
 # === Блок 2 ===
 import streamlit as st
