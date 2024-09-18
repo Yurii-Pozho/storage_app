@@ -8,7 +8,7 @@ import os
 import plotly.express as px
 
 # Вкажіть шлях до вашої SQLite бази даних у форматі URI
-database_path = 'sqlite:///C:/Users/user/Desktop/sales_intex/sales_bd/test_database.db'
+database_path = 'sqlite:///test_database.db'
 
 # Створення SQLAlchemy engine
 engine = create_engine(database_path)
