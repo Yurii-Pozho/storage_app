@@ -98,7 +98,7 @@ def load_image(img_path):
 
 st.write('<h1 style="text-align: center;">Перегляд даних за ID</h1>', unsafe_allow_html=True)
 
-id_input = st.text_input('Введіть ID')
+id_input = st.text_input('Введіть ID', placeholder='Введіть ID 174234')
 
 if id_input:
     filtered_df = df[df['id'] == int(id_input)]
